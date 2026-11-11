@@ -1,0 +1,12 @@
+node_modules/
+dist/
+build/
+.env
+.env.local
+*.log
+*.tsbuildinfo
+coverage/
+backend/data/
+Penjelasan_Testcase_TrailWallet.pdf
+.DS_Store
+

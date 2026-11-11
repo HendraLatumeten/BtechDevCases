@@ -1,0 +1,51 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-trailwallet}
+      POSTGRES_USER: ${POSTGRES_USER:-trailwallet}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-trailwallet_pass}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-trailwallet} -d ${POSTGRES_DB:-trailwallet}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: ${BACKEND_PORT:-3000}
+      DATABASE_URL: postgres://${POSTGRES_USER:-trailwallet}:${POSTGRES_PASSWORD:-trailwallet_pass}@postgres:5432/${POSTGRES_DB:-trailwallet}
+      JWT_SECRET: ${JWT_SECRET:-change-this-to-a-long-random-production-secret}
+      JWT_EXPIRES_IN: ${JWT_EXPIRES_IN:-24h}
+      INACTIVITY_TIMEOUT_MINUTES: ${INACTIVITY_TIMEOUT_MINUTES:-15}
+      INITIAL_WALLET_BALANCE: ${INITIAL_WALLET_BALANCE:-1000.00}
+      CORS_ORIGIN: ${CORS_ORIGIN:-http://localhost:8080,http://localhost:5173}
+    ports:
+      - "${BACKEND_PORT:-3000}:3000"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "${FRONTEND_PORT:-8080}:80"
+
+volumes:
+  pgdata:
+
