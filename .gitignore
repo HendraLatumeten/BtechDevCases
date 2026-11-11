@@ -7,6 +7,5 @@ build/
 *.tsbuildinfo
 coverage/
 backend/data/
-Penjelasan_Testcase_TrailWallet.pdf
 .DS_Store
 
